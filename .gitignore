@@ -1,0 +1,6 @@
+*.jpg
+data/
+__pycache__/
+.direnv/
+.envrc
+.DS_Store
