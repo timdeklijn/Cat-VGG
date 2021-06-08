@@ -1,7 +1,15 @@
 from pathlib import Path
 
+import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+import mlflow
+from sklearn.metrics import (confusion_matrix,
+                             ConfusionMatrixDisplay,
+                             accuracy_score,
+                             balanced_accuracy_score)
+
 from data import create_generators
 
 
@@ -57,7 +65,6 @@ def build_model():
     # Output layer
     model.add(Dense(2, activation="softmax", name="predictions"))
 
-    # TODO: add early stopping
     model.compile(
         loss=tf.keras.losses.CategoricalCrossentropy(),
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
@@ -66,13 +73,61 @@ def build_model():
     return model
 
 
+def calculate_model_metrics(model, valid_generator):
+    """
+    Get the predictions for the validation set and calculate model metrics
+    """
+    # Extract labels from the generator
+    y_true = valid_generator.classes
+
+    # Get predictions from model
+    predictions = model.predict(valid_generator)
+    y_pred = np.argmax(predictions, axis=1)
+
+    # Calculate and log metrics
+    mlflow.log_metric(key="accuracy", value=accuracy_score(y_true, y_pred))
+    mlflow.log_metric(key="balanced accuracy",
+                      value=balanced_accuracy_score(y_true, y_pred))
+
+    # Create, save and log a confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    ConfusionMatrixDisplay(cm, display_labels=[
+                           "Maz", "Rey"]).plot(values_format="d")
+    cm_name = Path("figures", "cm.png")
+    plt.savefig(cm_name)
+    mlflow.log_artifact(cm_name)
+
+
 def train_model(model, train_generator, valid_generator):
-    _ = model.fit(
-        train_generator,
-        epochs=5,
-        validation_data=valid_generator,
-    )
-    return model
+    """
+    Prepare tracking on MLFlow server, train a model and log the metrics
+    """
+
+    # Setup remote server
+    remote_server_uri = "http://0.0.0.0:5000"
+    mlflow.set_tracking_uri(remote_server_uri)
+    mlflow.set_experiment("cats-vgg16")
+
+    # Setup auto logging
+    mlflow.tensorflow.autolog()
+
+    # Start training
+    with mlflow.start_run():
+
+        # Early stopping based on validation loss.
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', patience=3)
+
+        # Train the model, we do not need to get the history since this is auto logged
+        # by MLFlow.
+        _ = model.fit(
+            train_generator,
+            epochs=2,
+            validation_data=valid_generator,
+            callbacks=[early_stopping])
+
+        # Calculate model metrics based on predictions on the validation set.
+        calculate_model_metrics(model, valid_generator)
 
 
 if __name__ == "__main__":
