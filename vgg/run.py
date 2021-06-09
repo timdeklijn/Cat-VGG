@@ -104,7 +104,7 @@ def train_model(model, train_generator, valid_generator):
     """
 
     # Setup remote server
-    remote_server_uri = "http://0.0.0.0:5000"
+    remote_server_uri = "http://127.0.0.1:5000"
     mlflow.set_tracking_uri(remote_server_uri)
     mlflow.set_experiment("cats-vgg16")
 
