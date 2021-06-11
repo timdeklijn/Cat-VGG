@@ -1,4 +1,5 @@
 from pathlib import Path
+import socket
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -102,10 +103,8 @@ def train_model(model, train_generator, valid_generator):
     """
     Prepare tracking on MLFlow server, train a model and log the metrics
     """
-
-    # Setup remote server
-    remote_server_uri = "http://127.0.0.1:5000"
-    mlflow.set_tracking_uri(remote_server_uri)
+    # mlflow.set_tracking_uri("http://0.0.0.0:5000")
+    mlflow.set_tracking_uri("http://server:5000")
     mlflow.set_experiment("cats-vgg16")
 
     # Setup auto logging
@@ -118,8 +117,8 @@ def train_model(model, train_generator, valid_generator):
         early_stopping = tf.keras.callbacks.EarlyStopping(
             monitor='val_loss', patience=3)
 
-        # Train the model, we do not need to get the history since this is auto logged
-        # by MLFlow.
+        # Train the model, we do not need to get the history since this is
+        # auto logged by MLFlow.
         _ = model.fit(
             train_generator,
             epochs=2,

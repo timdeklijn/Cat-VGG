@@ -1,0 +1,23 @@
+services:
+
+  trainer:
+    build: .
+    volumes: 
+      - ./data:/data
+      - ./figures:/figures
+    depends_on:
+      - server
+    links:
+      - server
+    environment:
+      - GIT_PYTHON_REFRESH=quiet
+        # command: python3 vgg/run.py
+
+  server:
+    image: crmne/mlflow-tracking
+    volumes:
+      - ./mlflow:/mlflow
+    ports:
+      - 5000:5000
+    # This sets the backends for MLFlow
+    command: --backend-store-uri /mlflow --default-artifact-root /mlflow

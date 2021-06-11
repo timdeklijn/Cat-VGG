@@ -5,3 +5,5 @@ __pycache__/
 .envrc
 .DS_Store
 mlflow/
+
+figures/cm.png
