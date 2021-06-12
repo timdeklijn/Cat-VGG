@@ -1,15 +1,11 @@
 from pathlib import Path
-import socket
 
 import numpy as np
-import matplotlib.pyplot as plt
+import wandb
+from wandb.keras import WandbCallback
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
-import mlflow
-from sklearn.metrics import (confusion_matrix,
-                             ConfusionMatrixDisplay,
-                             accuracy_score,
-                             balanced_accuracy_score)
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
 from data import create_generators
 
@@ -85,47 +81,48 @@ def calculate_model_metrics(model, valid_generator):
     predictions = model.predict(valid_generator)
     y_pred = np.argmax(predictions, axis=1)
 
-    # Calculate and log metrics
-    mlflow.log_metric(key="accuracy", value=accuracy_score(y_true, y_pred))
-    mlflow.log_metric(key="balanced accuracy",
-                      value=balanced_accuracy_score(y_true, y_pred))
+    # Calculate and log metrics to W&B
+    wandb.log({"accuracy": accuracy_score(y_true, y_pred)})
+    wandb.log({"balanced accuracy": balanced_accuracy_score(y_true, y_pred)})
 
-    # Create, save and log a confusion matrix
-    cm = confusion_matrix(y_true, y_pred)
-    ConfusionMatrixDisplay(cm, display_labels=[
-                           "Maz", "Rey"]).plot(values_format="d")
-    cm_name = Path("figures", "cm.png")
-    plt.savefig(cm_name)
-    mlflow.log_artifact(cm_name)
+    # Log a confusion matrix to W&B
+    wandb.log({
+        "conf_mat": wandb.plot.confusion_matrix(
+            probs=None,
+            y_true=y_true,
+            preds=y_pred,
+            class_names=["Maz", "Rey"])})
 
 
 def train_model(model, train_generator, valid_generator):
     """
     Prepare tracking on MLFlow server, train a model and log the metrics
     """
-    mlflow.set_tracking_uri("http://server:5000")
-    mlflow.set_experiment("cats-vgg16")
+    # Create a small set to visualize predictions on and show in W&B
+    val_images, val_labels = [], []
+    for _ in range(2):
+        v = valid_generator.next()
+        val_images.extend(v[0])
+        val_labels.extend(v[1])
 
-    # Setup auto logging
-    mlflow.tensorflow.autolog()
+    # Train the model, we do not need to get the history since this is
+    # auto logged by MLFlow.
+    _ = model.fit(
+        train_generator,
+        epochs=2,
+        validation_data=valid_generator,
+        callbacks=[WandbCallback(
+            data_type="image",
+            training_data=(val_images, val_labels),
+            labels=["Maz", "Rey"])])
 
-    # Start training
-    with mlflow.start_run():
-
-        # Train the model, we do not need to get the history since this is
-        # auto logged by MLFlow.
-        _ = model.fit(
-            train_generator,
-            epochs=2,
-            validation_data=valid_generator)
-
-        # Calculate model metrics based on predictions on the validation set.
-        calculate_model_metrics(model, valid_generator)
+    # Calculate model metrics based on predictions on the validation set.
+    calculate_model_metrics(model, valid_generator)
 
 
 if __name__ == "__main__":
+    wandb.init(project="cat-vgg")
     model = build_model()
-    print(model.summary())
 
     train = Path("data", "processed", "train")
     valid = Path("data", "processed", "valid")
