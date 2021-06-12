@@ -12,12 +12,18 @@ services:
     environment:
       - GIT_PYTHON_REFRESH=quiet
         # command: python3 vgg/run.py
+    runtime: nvidia
 
   server:
-    image: crmne/mlflow-tracking
+    build: 
+      context: .
+      dockerfile: tracking_server/Dockerfile
     volumes:
       - ./mlflow:/mlflow
+      - ./artefacts:/artefacts
     ports:
       - 5000:5000
     # This sets the backends for MLFlow
-    command: --backend-store-uri /mlflow --default-artifact-root /mlflow
+    # command: --backend-store-uri /mlflow --default-artifact-root /artefacts
+    # command: --backend-store-uri ./mlflow --default-artifact-root ./mlflow
+

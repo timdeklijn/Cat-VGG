@@ -103,7 +103,6 @@ def train_model(model, train_generator, valid_generator):
     """
     Prepare tracking on MLFlow server, train a model and log the metrics
     """
-    # mlflow.set_tracking_uri("http://0.0.0.0:5000")
     mlflow.set_tracking_uri("http://server:5000")
     mlflow.set_experiment("cats-vgg16")
 
@@ -113,17 +112,12 @@ def train_model(model, train_generator, valid_generator):
     # Start training
     with mlflow.start_run():
 
-        # Early stopping based on validation loss.
-        early_stopping = tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss', patience=3)
-
         # Train the model, we do not need to get the history since this is
         # auto logged by MLFlow.
         _ = model.fit(
             train_generator,
             epochs=2,
-            validation_data=valid_generator,
-            callbacks=[early_stopping])
+            validation_data=valid_generator)
 
         # Calculate model metrics based on predictions on the validation set.
         calculate_model_metrics(model, valid_generator)
