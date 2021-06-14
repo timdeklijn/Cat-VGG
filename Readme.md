@@ -13,10 +13,11 @@ images with either cat 1 (Maz) or cat 2 (Rey).
 poetry export --without-hashes -o requirements.txt
 ```
 
-## Notes
+## Logging in to Weights and Biases
 
-It is impossible(??) to connect the training in a container to a
-localhost tracking server. So I need to create a docker_compose file to
-fix this.
+The Weights and Biases API key is placed in a `.env` file and in docker compose
+this is set as a environment variable. The `.env` file:
 
-
+```
+WANDB_API_KEY=<API_KEY>
+```

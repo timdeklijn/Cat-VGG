@@ -4,26 +4,6 @@ services:
     build: .
     volumes: 
       - ./data:/data
-      - ./figures:/figures
-    depends_on:
-      - server
-    links:
-      - server
     environment:
-      - GIT_PYTHON_REFRESH=quiet
-        # command: python3 vgg/run.py
-    runtime: nvidia
-
-  server:
-    build: 
-      context: .
-      dockerfile: tracking_server/Dockerfile
-    volumes:
-      - ./mlflow:/mlflow
-      - ./artefacts:/artefacts
-    ports:
-      - 5000:5000
-    # This sets the backends for MLFlow
-    # command: --backend-store-uri /mlflow --default-artifact-root /artefacts
-    # command: --backend-store-uri ./mlflow --default-artifact-root ./mlflow
-
+      - WANDB_API_KEY=${WANDB_API_KEY}
+        # runtime: nvidia
