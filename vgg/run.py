@@ -4,7 +4,7 @@ import numpy as np
 import wandb
 from wandb.keras import WandbCallback
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
 from data import create_generators
@@ -57,14 +57,16 @@ def build_model():
     # Connected layers
     model.add(Flatten(name="flatten"))
     model.add(Dense(4096, name="fc1"))
+    model.add(Dropout(0.5, name="dropout1"))
     model.add(Dense(4096, name="fc2"))
+    model.add(Dropout(0.5, name="dropout2"))
 
     # Output layer
     model.add(Dense(2, activation="softmax", name="predictions"))
 
     model.compile(
         loss=tf.keras.losses.CategoricalCrossentropy(),
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+        optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001, momentum=0.9),
         metrics=[tf.keras.metrics.CategoricalAccuracy()])
 
     return model
@@ -109,7 +111,7 @@ def train_model(model, train_generator, valid_generator):
     # auto logged by MLFlow.
     _ = model.fit(
         train_generator,
-        epochs=2,
+        epochs=2000,
         validation_data=valid_generator,
         callbacks=[WandbCallback(
             data_type="image",

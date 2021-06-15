@@ -19,9 +19,9 @@ def create_generators(train_path: Path, validation_path: Path):
 
     # Generators now point to the complete dataset
     train_generator = train_datagen.flow_from_directory(
-        train_path, target_size=(224, 224), batch_size=5)
+        train_path, target_size=(224, 224), batch_size=10)
 
     validation_generator = test_datagen.flow_from_directory(
-        validation_path, target_size=(224, 224), batch_size=5)
+        validation_path, target_size=(224, 224), batch_size=10)
 
     return train_generator, validation_generator

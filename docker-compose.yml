@@ -6,4 +6,4 @@ services:
       - ./data:/data
     environment:
       - WANDB_API_KEY=${WANDB_API_KEY}
-        # runtime: nvidia
+    runtime: nvidia

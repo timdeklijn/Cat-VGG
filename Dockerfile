@@ -1,5 +1,5 @@
-# FROM tensorflow/tensorflow:2.4.1-gpu
-FROM tensorflow/tensorflow:2.4.1
+FROM tensorflow/tensorflow:2.4.1-gpu
+# FROM tensorflow/tensorflow:2.4.1
 
 ADD requirements.txt ./requirements.txt
 
