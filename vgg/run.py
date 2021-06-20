@@ -4,7 +4,7 @@ import numpy as np
 import wandb
 from wandb.keras import WandbCallback
 import tensorflow as tf
-from tf.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
