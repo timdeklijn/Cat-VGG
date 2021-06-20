@@ -4,6 +4,7 @@ import numpy as np
 import wandb
 from wandb.keras import WandbCallback
 import tensorflow as tf
+from tf.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
@@ -66,7 +67,7 @@ def build_model():
 
     model.compile(
         loss=tf.keras.losses.CategoricalCrossentropy(),
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001, momentum=0.9),
+        optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
         metrics=[tf.keras.metrics.CategoricalAccuracy()])
 
     return model
@@ -107,16 +108,24 @@ def train_model(model, train_generator, valid_generator):
         val_images.extend(v[0])
         val_labels.extend(v[1])
 
+    reduce_lr = ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.2,
+        patience=5,
+        min_lr=0.00001)
+
     # Train the model, we do not need to get the history since this is
     # auto logged by MLFlow.
     _ = model.fit(
         train_generator,
         epochs=2000,
         validation_data=valid_generator,
-        callbacks=[WandbCallback(
-            data_type="image",
-            training_data=(val_images, val_labels),
-            labels=["Maz", "Rey"])])
+        callbacks=[
+            reduce_lr,
+            WandbCallback(
+                data_type="image",
+                training_data=(val_images, val_labels),
+                labels=["Maz", "Rey"])])
 
     # Calculate model metrics based on predictions on the validation set.
     calculate_model_metrics(model, valid_generator)
