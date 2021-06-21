@@ -66,9 +66,9 @@ def build_model():
     model.add(Dense(2, activation="softmax", name="predictions"))
 
     model.compile(
-        loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        loss=tf.keras.losses.MeanSquaredError(),
         optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(from_logits=True)])
+        metrics=[tf.keras.metrics.MeanSquaredError()])
 
     return model
 
