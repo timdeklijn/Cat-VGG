@@ -68,7 +68,7 @@ def build_model():
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(from_logits=True)])
 
     return model
 
